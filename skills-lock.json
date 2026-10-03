@@ -45,10 +45,10 @@
       "skills": ".agents/skills (projeto/project)",
       "mcp": ".codex/config.toml",
       "hooks": ".codex/hooks.json",
-      "plugins": "instalação manual pelo catálogo Codex / manual Codex catalog installation"
+      "plugins": "instalaÃ§Ã£o manual pelo catÃ¡logo Codex / manual Codex catalog installation"
     }
   },
-  "nota": "Inventário de plugins Claude e origem das skills. O instalador verifica o commit de humanizer; versões e revisões dos plugins de marketplace não são fixadas. O campo caminho registra o destino Claude; clientes.codex informa o destino Codex no projeto. Humanizer-ptbr é copiada deste repo; demais skills sem upstream e plugins Codex são manuais.",
+  "nota": "InventÃ¡rio de plugins Claude e origem das skills. O instalador verifica o commit de humanizer; versÃµes e revisÃµes dos plugins de marketplace nÃ£o sÃ£o fixadas. O campo caminho registra o destino Claude; clientes.codex informa o destino Codex no projeto. Humanizer-ptbr Ã© copiada deste repo; demais skills sem upstream e plugins Codex sÃ£o manuais.",
   "note_en": "Claude plugin inventory and skill sources. Setup verifies the humanizer commit; marketplace plugin versions and revisions are not pinned. The caminho field records the Claude destination; clientes.codex describes the project-local Codex destination. Humanizer-ptbr is copied from this repo; other skills without an upstream and Codex plugins are manual.",
   "plugins": {
     "agent-skills": {
@@ -88,7 +88,7 @@
     },
     "impeccable": {
       "marketplace": "impeccable",
-      "origem": "diretório local (instale do upstream do plugin)",
+      "origem": "diretÃ³rio local (instale do upstream do plugin)",
       "revisao_do_marketplace": null,
       "escopo": "user",
       "versao_ativa": "4.2.1"
@@ -112,17 +112,17 @@
     "playwright-cli": {
       "caminho": "~/.claude/skills/playwright-cli",
       "upstream": null,
-      "nota": "instale à mão"
+      "nota": "instale Ã  mÃ£o"
     },
     "ui-ux-pro-max": {
       "caminho": "~/.claude/skills/ui-ux-pro-max",
       "upstream": null,
-      "nota": "instale à mão"
+      "nota": "instale Ã  mÃ£o"
     },
     "karpathy-guidelines": {
       "caminho": "~/.claude/skills/karpathy-guidelines",
       "upstream": null,
-      "nota": "instale à mão"
+      "nota": "instale Ã  mÃ£o"
     }
   },
   "capabilities": [
@@ -177,7 +177,7 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "882ba9355ba6bc988420f44e8aceb7c47e018bda01b68622a90d3299984110b2",
+        "contract_sha256": "7d03a63e957868481c2525282acdfb82f21f7969ce6e872c764970239317347a",
         "files_sha256": {
           "claude": "125b149cfd098757800a8d0728c892cfe2113c947a39044b59d65535712c6da2",
           "codex": "3592f2eb31bc4cf69a48e1ff3b6c5232718b38426871a840009528f55b270704"
@@ -239,7 +239,7 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "f62691940874fb27919977a6856d54691bdfc627e117d10e4c6ac2e77aaa731c",
+        "contract_sha256": "ff98a7a27ceeea3a0a34fd857a34dc3e0ac74d1566fc447dbe7880a7684fc28e",
         "files_sha256": {
           "claude": "609cc75a10c8a0977e135348df3c799a6d5f8e17e11f576b18d0030fa2be42d2",
           "codex": "c42223d52efab4da4de9ec87fcdf98abc41cdff6edbac2a0c684ca314783b56b"
@@ -285,7 +285,10 @@
           "scripts/mission_store.py",
           "scripts/mission_vault.py",
           "scripts/missions.py",
-          "scripts/capabilities.py"
+          "scripts/capabilities.py",
+          "scripts/mission_clients.py",
+          "scripts/mission_process.py",
+          "scripts/mission_runs.py"
         ],
         "claude": [
           ".claude/skills/personalizer/SKILL.md"
@@ -311,10 +314,10 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "16f0d34da792cae0a62d4360e2f719c1282d230db9c07863948b2390f7ddf463",
+        "contract_sha256": "fe64e1e6ffc75dd1ccace5846d8fafcb468eeb45cbccd888469bedb6b924bfde",
         "files_sha256": {
-          "claude": "7b5310c7baf10a9609797a77132bf16262da7bba308ea1047fc4e072b7b3c310",
-          "codex": "e85d60cedb6268a377612ee63cee4beacfeabe9d68d43d715a7e504652c0ae70"
+          "claude": "2e64e3150f0820bab9985e42bd7ae937759915a007700f9540fc26f039ed1e47",
+          "codex": "4c95b3f644fb7b94faec79bfef5780541d26d1ad790378d08df7920acdf7f355"
         }
       },
       "legacy_ref": "skills_de_projeto/personalizer"
@@ -368,7 +371,7 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "6bb2ddf73fce434b60a2572aa09a4e770840ebaab2f9d4c24bd948fe91f99b38",
+        "contract_sha256": "7ad320123e04855f3978e55d317283c0332ba2ad120fdcf132ad1a4a69a1348c",
         "files_sha256": {
           "claude": "a5f9e4d6b74e618cd0f148852e4bd46634a2c465ebd2eb185dc70fa88e498d9a",
           "codex": "c251fd132be15a95bed24a3a491914229ff545407256ca4a254ac603b08452c9"
@@ -425,7 +428,7 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "b5f565af982866d606c8761dde8aea3e65ead88a29389a3a9764daaa6e07f4b2",
+        "contract_sha256": "b3933b750811f9b0527275323daf92f9f4e0a873f77bd7b6942bb672211f346f",
         "files_sha256": {
           "claude": "ae30e98a9bf30c21bff2f82cfef254c1cdbe669a22b0c7b9914c96ce449f96f8",
           "codex": "1fd01db2b4e528155ad97e7cde940bc74490db05b728828abbd1dc9853ac6407"
@@ -1194,7 +1197,10 @@
           "skills/personalizer/references/interview.md",
           "scripts/adoption.py",
           "scripts/adoption_fs.py",
-          "scripts/adoption_acl.ps1"
+          "scripts/adoption_acl.ps1",
+          "scripts/mission_clients.py",
+          "scripts/mission_process.py",
+          "scripts/mission_runs.py"
         ],
         "claude": [
           ".claude/skills/yc-personalizer/SKILL.md"
@@ -1220,10 +1226,10 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "ee81cd79d02decaea77124adf82269bf74078353020517d3b399541f3aa75a70",
+        "contract_sha256": "ec50021c4efaf5fdfdbdc2005c998dedbc92364ed2e9bc48aabfacd48e5a43ca",
         "files_sha256": {
-          "claude": "b365afcb34f6fce5770db868a8982c336f1788ae06b9afadacf495f2dc37f9af",
-          "codex": "03d2f8cf294ea17c948c086ac81928b2e151b048152dc4525378390199abeec8"
+          "claude": "cc6a0786b7e43810d0816ddf5ecd27561e3e692cee8e4ccc65bcc089f53f3621",
+          "codex": "60eb1c27f8a79b5f1e0d73b34748b76cbfa24a9dd83dc511c38bdea26625678f"
         }
       }
     },
@@ -1266,7 +1272,10 @@
           "scripts/document_store.py",
           "scripts/integrations.py",
           "scripts/vault.py",
-          "scripts/adoption_fs.py"
+          "scripts/adoption_fs.py",
+          "scripts/mission_clients.py",
+          "scripts/mission_process.py",
+          "scripts/mission_runs.py"
         ],
         "claude": [
           ".claude/skills/yc-config/SKILL.md"
@@ -1285,17 +1294,21 @@
           "authorized project files",
           "vault/local"
         ],
-        "network": [],
-        "data": [],
+        "network": [
+          "explicitly authorized native client diagnostic"
+        ],
+        "data": [
+          "fixed echo-v1 diagnostic"
+        ],
         "environments": [],
         "credential_env": []
       },
       "native": {},
       "expected": {
-        "contract_sha256": "a3865f7680b805a9f78b58f7f0e41074510bb6911153c0405eb39de4dce8201c",
+        "contract_sha256": "af04e7ed3abf98f4b4bfce3867b6f7fb296c568fd6822fc503c1c5e2665cac17",
         "files_sha256": {
-          "claude": "5b4209f37e9e9436c6df6a7bb294edfc9a1d17e1c7788d98bb8b5a0a505509d4",
-          "codex": "2361826fe35aff4605a3c8a876563d9fa1485f7a9844563e36a2cc9196bec401"
+          "claude": "eab28655625c1f767514ebe423dedd8e5e8dfaa7bd63db2d6a550cf534c1b697",
+          "codex": "39fdff341834ad4176ab4e02c2dcd8721a1e9db6d705848d809d00ec90e0954e"
         }
       }
     },
@@ -1338,7 +1351,10 @@
           "scripts/document_store.py",
           "scripts/integrations.py",
           "scripts/vault.py",
-          "scripts/adoption_fs.py"
+          "scripts/adoption_fs.py",
+          "scripts/mission_clients.py",
+          "scripts/mission_process.py",
+          "scripts/mission_runs.py"
         ],
         "claude": [
           ".claude/skills/yc-missao/SKILL.md"
@@ -1364,10 +1380,10 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "25620a509777b6916efaa487d020d9af3b9e39bf2641d0a75c55ac68ecba2f8b",
+        "contract_sha256": "1006c21c1c4f4bec48c28500cc99dc893dacaea46049fc4972cf097d7c9e262a",
         "files_sha256": {
-          "claude": "eacaed8cedb17cb0414e9f670fb2e9978fc3c363323aa7bc2b626f60e98e5d65",
-          "codex": "ed955ab64faadd93980989972b1b42e17143e9a69e3fa281e7cad756d63c036b"
+          "claude": "1477597422e33accd3aebd464359ce124a90503f0dac13df03391a768adc05ae",
+          "codex": "164692e06313feff5c3ebd786c4875f06b7ed1def7a1a3d7392d3803f751869b"
         }
       }
     },
@@ -1410,7 +1426,10 @@
           "scripts/document_store.py",
           "scripts/integrations.py",
           "scripts/vault.py",
-          "scripts/adoption_fs.py"
+          "scripts/adoption_fs.py",
+          "scripts/mission_clients.py",
+          "scripts/mission_process.py",
+          "scripts/mission_runs.py"
         ],
         "claude": [
           ".claude/skills/yc-status/SKILL.md"
@@ -1433,10 +1452,10 @@
       },
       "native": {},
       "expected": {
-        "contract_sha256": "091549c3d66e68267b57113ccde1826c449fb52c8ac9c39bb9f7b157b862cbef",
+        "contract_sha256": "1438f51c4862501eacc8d43187a2bbbec0e182293ccd7d282bce0ccec0ee6187",
         "files_sha256": {
-          "claude": "9bb7dbba2a524df26bbff830bc225d723abc1a96d2b826d180cd6180c7fa3f4a",
-          "codex": "db4ab42c433949a997f4a1c5c9f146604f2acab3682586bd43e404c2ee8bcc54"
+          "claude": "b6c078e0711a9c57e35e2cd09e23b3dbe3cba8ce7f37e0ad06a3b4b06b603130",
+          "codex": "0323d7a691b34f118829774755404463a73cdae540ecb306767105ea18219e98"
         }
       }
     }

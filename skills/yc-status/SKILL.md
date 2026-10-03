@@ -18,7 +18,17 @@ storage, import notes, apply defaults or repair projections as part of a consult
 Report state/revision, planning gaps, `stale_inputs`, event times and projection state. Distinguish
 frozen mission configuration from current project defaults. `prepared` means complete planning;
 `runtime_available` and `runnable` remain false. Development/QA are not started and production is
-unverified. Model/effort compatibility is not verified by this backend.
+unverified. Report client diagnostic receipts separately, with requested/resolved/observed model,
+effort, connection, timestamps and limits. Unknown cost or observed model stays unknown.
+
+```bash
+python3 -B scripts/missions.py client runs --mission M001 --json
+```
+
+This also reads without initializing, migrating or repairing storage. A successful diagnostic
+does not enable mission execution. A `reserved`, `running` or `uncertain` receipt blocks a new
+check until resolved. Report the same operation UUID and the evidence needed for reconciliation;
+do not issue a fresh UUID, replay the check or reconcile as part of a status request.
 
 For missing or stale evidence, name the next action without performing it. Documents need
 `ingest-source`; capability changes need `govern-capabilities`; refinement needs `yc-missao`.

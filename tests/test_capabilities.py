@@ -45,12 +45,13 @@ class CapabilityCase(ProjectCase):
 
 
 class CatalogTests(CapabilityCase):
-    def test_mission_catalog_has_real_offline_contracts(self):
+    def test_mission_catalog_has_explicit_diagnostic_permissions(self):
         names = {'yc-personalizer', 'yc-config', 'yc-missao', 'yc-status'}
         selected = [cap for cap in caps.load_catalog(ROOT) if cap['id'] in names]
         self.assertEqual({cap['id'] for cap in selected}, names)
         for cap in selected:
-            self.assertEqual(cap['permissions']['network'], [])
+            expected = ['explicitly authorized native client diagnostic'] if cap['id'] == 'yc-config' else []
+            self.assertEqual(cap['permissions']['network'], expected)
             self.assertEqual(cap['permissions']['credential_env'], [])
             self.assertEqual(cap['expected']['contract_sha256'], caps.contract_digest(cap))
             for client in ('claude', 'codex'):

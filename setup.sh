@@ -58,6 +58,7 @@ FILES+=(scripts/memory.py scripts/graphify_worker.py requirements/graphify.txt s
 FILES+=(scripts/capabilities.py skills/govern-capabilities/SKILL.md)
 FILES+=(scripts/adoption.py scripts/adoption_fs.py scripts/adoption_acl.ps1)
 FILES+=(scripts/mission_config.py scripts/mission_backlog.py scripts/mission_store.py scripts/mission_vault.py scripts/missions.py)
+FILES+=(scripts/mission_clients.py scripts/mission_process.py scripts/mission_runs.py)
 FILES+=(skills/yc-personalizer/SKILL.md skills/yc-config/SKILL.md skills/yc-missao/SKILL.md skills/yc-status/SKILL.md)
 SKILL_ROOTS=()
 if [ "$CLIENT" != codex ]; then
@@ -216,7 +217,7 @@ copiar() {  # copiar <relativo>: nunca sobrescreve sem --force
   # Knowledge is product data, never a replaceable configuration template.
   if [[ "$rel" == vault/* ]] && [ -e "$dst" ]; then echo "  mantido / preserved: $rel (vault)"; return; fi
   case "$rel" in
-    skills-lock.json|skills/*|.claude/skills/*|.agents/skills/*|.claude/agents/*|.codex/agents/*)
+    skills-lock.json|skills/*|.claude/skills/*|.agents/skills/*|.claude/agents/*|.codex/agents/*|scripts/mission_clients.py|scripts/mission_runs.py|scripts/mission_process.py)
       if [ -e "$dst" ]; then
         echo "  preservado / preserved: $rel; compare e mescle / compare and merge"; return
       fi ;;

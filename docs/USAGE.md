@@ -1638,3 +1638,169 @@ journal, `status` can return `invalid_store` without writing. Explicit `repair` 
 before validating the supported schema and projecting notes. Incompatible stores remain rejected.
 Retry a first write that left an empty database. Aggregated projections over 1 MiB use streaming hashes;
 source-note limits remain unchanged.
+
+<a id="mission-client-checks"></a>
+
+## Modelos e diagnóstico / Models and diagnostics
+
+Estado desta entrega: catálogo e mecanismo disponíveis; chamadas reais bloqueadas nos dois
+clientes enquanto os perfis de isolamento são comprovados. Os comandos abaixo documentam o
+contrato instalado; `client check` retorna `unsupported_policy` nas combinações ainda sem prova.
+
+Current delivery: catalog and mechanism available; live calls blocked in both clients pending
+isolation proofs. The commands below document the installed contract; `client check` returns
+`unsupported_policy` for combinations without that evidence.
+
+Os adaptadores consultam o catálogo do cliente instalado e os esforços aceitos por modelo.
+`latest` seleciona a recomendação atual desse cliente para a conta autenticada. A recomendação
+pode diferir do lançamento mais recente do fornecedor. Um nome explícito mantém a escolha fixa;
+a execução recusa combinações ausentes no catálogo. `native` permite escolher esforços adicionais
+anunciados pelo cliente. `{"level":"native","native_value":"client-default"}` conserva o padrão
+do modelo, inclusive quando ele não oferece controle de esforço. Inspeção não comprova uma
+chamada ao modelo. A missão permanece com `runnable: false` após qualquer diagnóstico.
+
+Adapters read the installed client's model and effort catalog. `latest` resolves the client's current
+account recommendation, which may differ from the provider's newest release. Choose an explicit
+model to pin it, and use `native` for additional effort levels advertised by that client. Unsupported
+combinations fail without a fallback. `{"level":"native","native_value":"client-default"}` keeps
+the model default, including models without effort control. Inspection does not prove model
+execution. Missions remain `runnable: false` after every diagnostic.
+
+Recibos do diagnóstico reservam uma tentativa e seu tempo antes do processo. Repetir o UUID
+consulta a mesma execução. Estado incerto bloqueia outra prova no projeto; consumo desconhecido
+continua desconhecido. O Windows usa um Job Object antes de liberar o cliente; no Linux x86-64,
+o grupo de processos usa um filtro herdado que impede sair do grupo. Essas medidas controlam
+os processos; o perfil de ferramentas de cada cliente exige prova própria. Notas e microíndices
+ficam em `vault/local/missions/<UUID>/runs/`, e edições humanas são preservadas.
+
+Diagnostic receipts reserve one attempt and its time before spawning. Repeating the UUID reads
+the same run. Uncertain state blocks another project check; unknown cost stays unknown. Windows
+assigns a Job Object before releasing the client. Linux x86-64 uses a process group with inherited
+restrictions on leaving that group. Process containment and client tool permissions need separate
+proofs. Receipts and indexes live in `vault/local/missions/<UUID>/runs/`; human edits are preserved.
+
+### Inspecionar, escolher e provar / Inspect, choose and check
+
+1. Termine o setup e prepare uma missão pelo [rito de preparação](#mission-workflow).
+2. Consulte o executável oficial instalado. No Windows, informe o `.exe` nativo; launchers npm
+   `.cmd` não são aceitos. Use `python` onde `python3` não estiver disponível.
+3. Escolha modelo e esforço em `youngcrow/agents.json` com `yc-config`. Uma missão já preparada
+   conserva as escolhas anteriores; use `revise` para uma alteração explícita naquela missão.
+4. Revise os `gaps` e a conexão. Uma pendência impede o diagnóstico. Não troque de conta, modelo
+   ou cliente para contornar uma recusa.
+
+```bash
+python3 -B scripts/missions.py client inspect --client codex --executable CAMINHO_DO_EXECUTAVEL --json
+python3 -B scripts/missions.py client inspect --client claude --executable CAMINHO_DO_EXECUTAVEL --json
+```
+
+O catálogo é consultado a cada operação nova. `latest` é resolvido e registrado naquele momento;
+não baixa clientes nem garante o lançamento global mais recente. A inspeção usa versão, ajuda,
+metadados e status de autenticação oficiais, sem enviar um turno de modelo. Não cria banco ou
+recibos do harness. O próprio cliente pode manter caches locais.
+
+Crie `vault/local/client-check.json` com os UUIDs e a revisão reais. `authorization_ref` registra a
+autorização que você concedeu; o texto do modelo não pode concedê-la. Este exemplo usa até 120
+segundos, desde que a configuração congelada tenha esse limite. Cada execução nova precisa de
+um UUID novo; uma repetição da mesma execução conserva **o manifesto inteiro**.
+
+```json
+{
+  "schema_version": 1,
+  "mission_id": "UUID_DA_MISSAO",
+  "mission_revision": 1,
+  "role": "pm",
+  "operation_id": "UUID_DA_OPERACAO",
+  "authorization_ref": "Autorizo um diagnóstico echo-v1 com a conta já autenticada",
+  "agent_seconds": 120,
+  "max_runs": 1,
+  "api_budget_usd": null,
+  "fixture_id": "echo-v1"
+}
+```
+
+```bash
+python3 -B scripts/missions.py client check --manifest vault/local/client-check.json --executable CAMINHO_DO_EXECUTAVEL --json
+python3 -B scripts/missions.py client runs --mission M001 --json
+python3 -B scripts/missions.py --json status M001
+```
+
+A prova pede somente a devolução de um identificador JSON. Não aceita prompt, URL, shell ou
+capacidade adicional. O recibo separa modelo pedido, resolvido e observado. Esforço observado
+fica nulo quando não informado. Custo nulo significa desconhecido; um valor informado pelo
+cliente não é confirmação da fatura. Assinatura nunca muda para API implicitamente.
+
+First finish setup and prepare a mission. Inspect the official native executable, then choose
+model and effort with `yc-config`; revise an existing mission to change its frozen choices.
+Review profile gaps before using the manifest above with real UUIDs and revision. Keep the
+entire manifest unchanged when retrying the same operation. A new operation refreshes the
+catalog and resolves `latest`; it neither upgrades clients nor guarantees the newest global
+release. Inspection sends no model turn and creates no harness database or receipts; the
+native client may maintain its own caches.
+
+The check only asks for its JSON nonce back. Arbitrary prompts, URLs, shell and additional
+capabilities are rejected. Requested, resolved and observed model values remain separate.
+Missing effort or cost stays null. Client-reported cost does not confirm a bill. Subscription
+authentication never silently changes to an API connection.
+
+### Interrupção e recuperação / Interruption and recovery
+
+`client runs` e `status` só leem. Não migram o banco, não corrigem notas nem iniciam processos.
+O primeiro diagnóstico autorizado migra o esquema 1 para 2 numa transação aditiva. Uma falha
+na projeção deixa `pending`; repetir o mesmo manifesto recupera a nota sem repetir o modelo.
+`conflict` preserva uma edição humana e requer comparação manual.
+
+Se o coordenador cair, consulte os recibos e repita **o mesmo manifesto**. A operação anterior
+pode ficar `uncertain`; nenhum UUID novo permite contornar esse bloqueio. Confira término dos
+processos e o efeito externo antes de reconciliar. Guarde a análise em arquivos privados e
+referencie seus bytes exatos num JSON, por exemplo `vault/local/client-evidence.json`:
+
+```json
+{
+  "authorization_ref": "Revisão do operador: processo encerrado e efeito externo conferido",
+  "termination": {"path": "vault/local/termination.md", "sha256": "SHA256_REAL"},
+  "external_effect": {"path": "vault/local/external-effect.md", "sha256": "SHA256_REAL"}
+}
+```
+
+```bash
+python3 -B scripts/missions.py client reconcile --run UUID_DO_RUN --evidence vault/local/client-evidence.json --expected-revision REVISAO_ATUAL --operation-id UUID_DA_RECONCILIACAO --json
+```
+
+Hash prova a identidade do arquivo, não a veracidade do relato. A reconciliação exige também
+que o processo registrado esteja encerrado; nunca mata um PID fornecido pelo operador. O
+resultado é `interrupted`, conservando tentativa, reserva de tempo e custo desconhecido.
+Os limites contam reservas anteriores, inclusive falhas. Criar outro UUID não renova o orçamento.
+
+`client runs` and `status` only read: no migration, repair or process launch. The first authorized
+check migrates schema 1 to 2 atomically. Repeating a manifest repairs a pending projection without
+calling the model again; human edits produce a preserved conflict. After a crash, read receipts
+and retry the same manifest. `uncertain` blocks new operations until operator reconciliation.
+Review process termination and external effects, then bind private evidence files by SHA-256
+using the command above. Hashes identify bytes, not truth. Reconciliation also requires the
+recorded process to be gone; it never kills an operator-supplied PID. It records `interrupted`
+without resetting attempts, reserved time or unknown cost. Failed runs still consume limits.
+
+| Código / Code | Ação / Action |
+|---|---|
+| `unsupported_policy` | Confira a matriz de perfil; não contorne o bloqueio / check the profile matrix; do not bypass it |
+| `unsupported_combination` | Escolha modelo/effort presente no catálogo / choose an advertised model/effort |
+| `connection_conflict` | Resolva a conexão configurada; não imprima credenciais / resolve the selected connection without printing credentials |
+| `stale_observation` | Binário ou política mudou; uma nova operação exige nova inspeção / binary or policy changed; a new operation requires inspection |
+| `unresolved_run` | Retome o recibo pendente antes de outra prova / recover the existing receipt before another check |
+| `operation_conflict` | O UUID já pertence a outro conteúdo / the UUID already identifies different input |
+| `limit_exceeded` | A reserva supera o limite congelado / the reservation exceeds frozen limits |
+| `insufficient_evidence` | Processo ativo ou evidência incompleta: mantenha o bloqueio / active process or incomplete evidence: retain the block |
+
+Saída 0: consulta sem pendência ou diagnóstico concluído. Saída 1: `gaps`, execução interrompida,
+falha, incerteza ou conflito de projeção; uma reconciliação para `interrupted` também retorna 1.
+Saída 2: entrada/combinação recusada. Confira sempre o JSON. Perfis são verificados por cliente,
+sistema, versão e hash do executável; atualizar o cliente pode exigir nova prova de isolamento.
+API, macOS e outras arquiteturas sem prova continuam bloqueados. Veja a
+[matriz da entrega](relatorios/2026-10-03-mission-runtime-adapters.md).
+
+Exit 0 means a query without gaps or a successful check. Exit 1 includes profile gaps, interrupted,
+failed or uncertain runs and projection conflicts; reconciliation to `interrupted` also returns 1.
+Exit 2 means rejected input/combination. Always read the JSON. Profiles bind the client, OS, version
+and executable hash; a client update can require a new isolation proof. API, macOS and unverified
+architectures remain blocked. See the [delivery matrix](relatorios/2026-10-03-mission-runtime-adapters.md).

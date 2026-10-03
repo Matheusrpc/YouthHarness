@@ -22,6 +22,33 @@ DB = 'vault/local/operations/state.sqlite3'
 
 
 class MissionTests(MissionCase):
+    def test_client_runs_is_readonly_on_fresh_project(self):
+        before = self.snapshot()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = self.m.main(['--root', str(self.root), '--json', 'client', 'runs', '--mission', 'M001'])
+        self.assertEqual(code, 0, output.getvalue())
+        self.assertEqual(json.loads(output.getvalue())['runs'], [])
+        self.assertEqual(before, self.snapshot())
+
+    def test_client_check_requires_manifest_and_sanitizes_errors(self):
+        import mission_runs
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = self.m.main(['--root', str(self.root), 'client', 'check', '--executable', sys.executable])
+        self.assertNotEqual(code, 0)
+        self.assertEqual(json.loads(output.getvalue())['error'], 'invalid_arguments')
+        manifest = self.root / 'vault/local/probe.json'
+        manifest.write_text('{}')
+        output = io.StringIO()
+        with patch.object(mission_runs, 'check_client', side_effect=ValueError('fixture-secret-never-print')):
+            with redirect_stdout(output):
+                code = self.m.main(['--root', str(self.root), 'client', 'check', '--executable', sys.executable,
+                                    '--manifest', 'vault/local/probe.json'])
+        self.assertNotEqual(code, 0)
+        self.assertNotIn('fixture-secret-never-print', output.getvalue())
+        self.assertNotIn('No provider was called', output.getvalue())
+
     def setUp(self):
         super().setUp()
         self.assertIsNotNone(importlib.util.find_spec('missions'), 'mission backend not implemented')
@@ -356,6 +383,23 @@ os._exit(73)
         self.assertEqual(status['state'], 'draft')
         self.assertTrue(any('invalid_dependency' in gap for gap in status['gaps']))
         self.assertTrue(any(':dor' in gap for gap in status['gaps']))
+
+    def test_incompatible_client_helper_is_rejected_before_any_write(self):
+        before = self.snapshot()
+        with patch.dict(sys.modules, {'mission_clients': object()}):
+            with self.assertRaisesRegex(ValueError, '^incompatible_helper$'):
+                self.m.runtime_helpers()
+        self.assertEqual(self.snapshot(), before)
+
+    def test_native_probe_requires_explicit_manifest(self):
+        before = self.snapshot()
+        smoke = Path(__file__).parent / 'smoke_mission_runtime.py'
+        for arguments in (['--executable', sys.executable], ['--native-manifest', 'vault/local/absent.json']):
+            result = subprocess.run([sys.executable, '-B', str(smoke), '--root', str(self.root), *arguments],
+                                    capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn('mission_runtime_smoke_failed', result.stdout)
+        self.assertEqual(self.snapshot(), before)
 
 
 if __name__ == '__main__':

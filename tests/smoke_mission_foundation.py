@@ -23,7 +23,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def mission_smoke(root, client):
+def mission_smoke(root, client, extra_check=None):
     outcomes, retained = [], {}
 
     def prepare_existing(project, case, env):
@@ -137,6 +137,8 @@ print(json.dumps(result))
             for name in retained:
                 if name != 'youngcrow/agents.json':
                     check(digest(project / name) == retained[name], 'legacy_content_changed')
+        if extra_check:
+            extra_check(project, case, env, first['record_id'])
         vault = json.loads(run([sys.executable, '-B', 'scripts/vault.py', 'check', '--json'], env=env, cwd=project))
         check(vault['issues'] == [], 'vault_invalid')
         outcomes.append(dict(mode=mode, project_id=fixture.project_id, features=2, pbis=4,

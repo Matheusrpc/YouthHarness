@@ -103,3 +103,38 @@ def project_receipt(root, receipt, record):
             append_link(root, index, f'[{record["code"]}]({target})')
         conn.execute("UPDATE events SET projection_state='current' WHERE seq=?", (event['sequence'],))
         return dict(state='current', paths=paths)
+
+
+def project_run(root, run_id):
+    from mission_store import transaction
+    from mission_runs import find_run, has_runs
+    with transaction(root) as conn:
+        require(has_runs(conn), 'unknown_run')
+        run = find_run(conn, identity(run_id))
+        project_id = conn.execute('SELECT project_id FROM metadata').fetchone()[0]
+        sequence = conn.execute('SELECT MAX(seq) FROM agent_run_events WHERE run_id=?', (run_id,)).fetchone()[0]
+        base = f"vault/local/missions/{run['mission_id']}/runs"
+        path, index = f'{base}/{run_id}.md', f'{base}/index.md'
+        body = (f"# Client check · {run['state']}\n\n[Index](index.md) · [Mission](../index.md)\n\n"
+                + '```json\n' + json.dumps(run, ensure_ascii=False, indent=2) + '\n```\n')
+        data = markdown(run_id, 'receipt', 'Client diagnostic', 'index.md', body, run['updated_at']).encode()
+        for relative in (path, index):
+            safe_path(root, relative)
+        if (root / path).exists():
+            observed = projection_hash(root, path)
+            saved = conn.execute('SELECT sha256 FROM agent_run_projections WHERE path=?', (path,)).fetchone()
+            if observed != hashlib.sha256(data).hexdigest() and (saved is None or saved[0] != observed):
+                conn.execute("UPDATE agent_run_events SET projection_state='conflict' WHERE run_id=?", (run_id,))
+                return dict(state='conflict', paths=[path, index])
+        if not (root / index).exists():
+            note_id = str(uuid.uuid5(uuid.UUID(project_id), index))
+            atomic_write(root, index, markdown(note_id, 'index', 'Client checks', '../../index.md',
+                                               '# Client checks\n\n[Mission](../index.md)\n', run['updated_at']))
+        # Link from the missions index, whose append-only links are preserved by mission repair.
+        append_link(root, 'vault/local/missions/index.md', f"[Client checks]({run['mission_id']}/runs/index.md)")
+        append_link(root, index, f'[{run_id}]({run_id}.md)')
+        atomic_write(root, path, data)
+        conn.execute('INSERT INTO agent_run_projections VALUES(?,?,?) ON CONFLICT(path) DO UPDATE SET sha256=excluded.sha256,sequence=excluded.sequence',
+                     (path, hashlib.sha256(data).hexdigest(), sequence))
+        conn.execute("UPDATE agent_run_events SET projection_state='current' WHERE run_id=?", (run_id,))
+        return dict(state='current', paths=[path, index])

@@ -1,0 +1,69 @@
+{
+  "front": "2A",
+  "state": "partial",
+  "mission_runtime_available": false,
+  "windows": {
+    "python": "3.14.4",
+    "mission_suite": {
+      "tests": 69,
+      "skipped": 1,
+      "seconds": 848.731,
+      "result": "passed"
+    },
+    "setup_preservation": {
+      "tests": 1,
+      "seconds": 46.95,
+      "result": "passed"
+    },
+    "cli": {
+      "tests": 2,
+      "seconds": 3.448,
+      "result": "passed"
+    },
+    "extended_runtime": {
+      "tests": 12,
+      "seconds": 444.366,
+      "result": "passed"
+    },
+    "installed_smoke": "pending",
+    "client_contracts": {
+      "tests": 18,
+      "seconds": 3.03,
+      "result": "passed"
+    },
+    "native_discovery": {
+      "claude": "passed",
+      "codex": "passed",
+      "mission_skills": 4,
+      "model_turns": 0
+    }
+  },
+  "linux": {
+    "result": "pending_ci"
+  },
+  "native": {
+    "codex": {
+      "version": "0.146.0",
+      "catalog": "observed",
+      "auth": "authenticated",
+      "profile": "blocked_view_image",
+      "model_turns": 0
+    },
+    "claude": {
+      "version": "2.1.220",
+      "catalog": "observed",
+      "auth": "authenticated",
+      "profile": "blocked_managed_policy_unverified",
+      "model_turns": 0,
+      "live_result": "unsupported"
+    },
+    "api": "unsupported",
+    "linux": "profile_unverified"
+  },
+  "commands": [
+    "python -B tests/windows_fixture_runner.py -m unittest discover -s tests -p test_mission*.py -v",
+    "python -B tests/windows_fixture_runner.py -m unittest discover -s tests -p test_setup.py -k runtime_helpers -v",
+    "python -B tests/windows_fixture_runner.py tests/smoke_mission_runtime.py --root ABSENT_SHORT_PATH --client both"
+  ],
+  "raw_outputs": "private_only"
+}

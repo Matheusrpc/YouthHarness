@@ -1,4 +1,4 @@
-"""Prepare product missions locally. No model dispatch, test runner or deployment."""
+"""Prepare product missions and explicitly bounded client diagnostics. No PBI or deploy runner."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -256,11 +256,27 @@ def mission_status(root, mission_id):
                 state = 'pending'
         except (OSError, ValueError):
             state = 'conflict'
+    runs = runtime_helpers()[1].list_runs(root, existing['id'])
     return dict(schema_version=1, id=existing['id'], code=existing['code'], revision=existing['revision'],
                 state=snapshot['state'], snapshot=snapshot, gaps=snapshot['gaps'], stale_inputs=sorted(stale),
                 events=[{k: v for k, v in e.items() if k not in ('record', 'request_hash')} for e in history],
                 projection_state=state, compatibility={role: 'not_verified' for role in snapshot['config']['agents']},
-                runtime_available=False, runnable=False, next_action='revise_inputs' if stale else 'complete_gaps' if snapshot['gaps'] else 'runtime_not_available')
+                runtime_available=False, runnable=False, check_available=True, client_runs=runs,
+                next_action='revise_inputs' if stale else 'complete_gaps' if snapshot['gaps'] else 'runtime_not_available')
+
+
+def runtime_helpers():
+    try:
+        import mission_clients
+        import mission_runs
+        require(getattr(store, 'RUNTIME_SCHEMA', None) == 2, 'incompatible_helper')
+        require(all(callable(getattr(mission_clients, name, None)) for name in
+                    ('inspect_client', 'build_check', 'decode_result')), 'incompatible_helper')
+        require(all(callable(getattr(mission_runs, name, None)) for name in
+                    ('check_client', 'list_runs', 'reconcile_check')), 'incompatible_helper')
+        return mission_clients, mission_runs
+    except (ImportError, SyntaxError, AttributeError):
+        raise ValueError('incompatible_helper') from None
 
 
 def repair(root, identifier):
@@ -312,13 +328,36 @@ def parser():
         sub.add_argument('--actor-role', choices=('pm', 'tech_lead'), required=True)
     for name in ('status', 'repair'):
         subs.add_parser(name).add_argument('identifier')
+    client = subs.add_parser('client').add_subparsers(dest='action', required=True)
+    inspect = client.add_parser('inspect')
+    inspect.add_argument('--client', choices=('codex', 'claude'), required=True)
+    inspect.add_argument('--executable', type=Path, required=True)
+    check = client.add_parser('check')
+    check.add_argument('--manifest', required=True)
+    check.add_argument('--executable', type=Path, required=True)
+    runs = client.add_parser('runs')
+    runs.add_argument('--mission', required=True)
+    reconcile = client.add_parser('reconcile')
+    reconcile.add_argument('--run', required=True)
+    reconcile.add_argument('--evidence', required=True)
+    reconcile.add_argument('--expected-revision', type=int, required=True)
+    reconcile.add_argument('--operation-id', required=True)
+    for entry in (inspect, check, runs, reconcile):
+        entry.add_argument('--json', action='store_true')
     return p
 
 
 CONFLICTS = {'operation_conflict', 'revision_conflict', 'config_conflict', 'identity_conflict', 'store_busy', 'invalid_store'}
 SAFE_ERRORS = CONFLICTS | {'invalid_config', 'invalid_request', 'invalid_arguments', 'invalid_digest', 'invalid_actor',
                          'invalid_revision', 'invalid_identity', 'invalid_priority', 'unknown_mission', 'unknown_feature',
-                         'unknown_record', 'foreign_project', 'invalid_contract', 'incompatible_helper'}
+                         'unknown_record', 'foreign_project', 'invalid_contract', 'incompatible_helper',
+                         'invalid_manifest', 'invalid_client', 'invalid_executable', 'unsupported_policy',
+                         'unsupported_containment', 'unsupported_combination', 'connection_conflict', 'connection_unverified',
+                         'stale_observation', 'ambiguous_model', 'api_budget_required', 'missing_credential',
+                         'unsupported_probe_capabilities', 'client_discovery_failed', 'client_discovery_timeout',
+                         'client_protocol_error', 'client_output_limit', 'client_catalog_limit', 'unsupported_client',
+                         'limit_exceeded', 'mission_not_ready', 'unresolved_run', 'unknown_run', 'insufficient_evidence',
+                         'invalid_transition'}
 
 
 def main(argv=None):
@@ -326,7 +365,17 @@ def main(argv=None):
         check_helpers()
         args = parser().parse_args(argv)
         root = args.root.resolve(strict=True)
-        if args.command == 'config':
+        if args.command == 'client':
+            clients, runs = runtime_helpers()
+            if args.action == 'inspect':
+                result = clients.inspect_client(root, args.client, args.executable)
+            elif args.action == 'runs':
+                result = dict(schema_version=1, runs=runs.list_runs(root, args.mission), runtime_available=False)
+            elif args.action == 'check':
+                result = runs.check_client(root, load_input(root, args.manifest), args.executable)
+            else:
+                result = runs.reconcile_check(root, args.run, load_input(root, args.evidence), args.expected_revision, args.operation_id)
+        elif args.command == 'config':
             if args.action == 'show':
                 config = config_current(root)
                 result = config_report(config) if config else dict(schema_version=1, state='not_configured')
@@ -344,10 +393,13 @@ def main(argv=None):
         else:
             result = mission_status(root, args.identifier) if args.command == 'status' else repair(root, args.identifier)
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 1 if result.get('projection_state') in ('pending', 'conflict') else 0
+        failed = result.get('projection_state') in ('pending', 'conflict')
+        if args.command == 'client':
+            failed |= bool(result.get('gaps')) or result.get('state') in ('failed', 'interrupted', 'uncertain', 'running', 'reserved')
+        return 1 if failed else 0
     except (ValueError, OSError, TypeError, KeyError) as error:
         code = str(error) if str(error) in SAFE_ERRORS else 'invalid_input'
-        print(json.dumps(dict(schema_version=1, error=code, guidance='Review local inputs and the mission usage guide. No provider was called.')))
+        print(json.dumps(dict(schema_version=1, error=code, guidance='Review local inputs, durable client receipts and the mission usage guide before retrying.')))
         return 1 if code in CONFLICTS else 2
 
 

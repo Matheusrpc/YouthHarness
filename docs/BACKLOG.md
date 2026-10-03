@@ -51,7 +51,7 @@ permitir verificar o executor antes de lhe dar uma fila de desenvolvimento e tra
 | Ordem | Entrega | Resultado visível | Situação |
 |---|---|---|---|
 | 1 | Fundação das missões | Personalizar, configurar, preparar e consultar | Publicada |
-| 2A | Executor limitado e adaptadores | Inspecionar o cliente e provar uma execução delimitada, com recibo e recuperação | [Plano em revisão](superpowers/plans/2026-10-03-mission-runtime-adapters.md); próxima implementação |
+| 2A | Executor limitado e adaptadores | Inspecionar o cliente e provar uma execução delimitada, com recibo e recuperação | Parcial: mecanismo implementado; perfis nativos bloqueados. [Provas e pendências](relatorios/2026-10-03-mission-runtime-adapters.md) |
 | 2B | Fila e desenvolvimento | Puxar PBIs por prioridade, com três PBIs/três agentes e branches próprias | Planejada; depende de 2A |
 | 2C | Continuidade | Pausar, retomar e transferir local/servidor sem duplicar responsabilidade | Planejada; depende de 2B |
 | 3 | QA e integração | Revisão independente, testes, Playwright, correções e versão integrada | Planejada; depende de 2B; aceite conjunto inclui 2C |
@@ -76,9 +76,9 @@ Até ela existir, esses ritos são conduzidos nas sessões autorizadas.
 
 | ID | Feature / PBI | Depende de | Critério de aceite | Estado |
 |---|---|---|---|---|
-| YC-201 | 2A: preflight e compatibilidade dos clientes | Frente 1 | Conferir cliente, versão, modelo/effort, autenticação selecionada e capacidades. Configuração desconhecida fica bloqueada, sem fallback ou chamada de modelo | Plano em revisão |
-| YC-202 | 2A: execução limitada e recibos duráveis | YC-201 | Reservar operação antes de chamar; impor tempo e quantidade, registrar consumo observado, encerrar processos próprios e conservar resultado incerto sem repetir | Plano em revisão |
-| YC-203 | 2A: instalação, consulta e provas dos adaptadores | YC-202 | Provar cliente autenticado e API explícita quando houver acesso, em matriz por ambiente; consulta sem escrita e adoção preservada. Cada combinação sem prova permanece indisponível | Plano em revisão |
+| YC-201 | 2A: preflight e compatibilidade dos clientes | Frente 1 | Conferir cliente, versão, modelo/effort, autenticação selecionada e capacidades. Configuração desconhecida fica bloqueada, sem fallback ou chamada de modelo | Implementado; catálogo dinâmico e recusas testados. Perfis nativos continuam sem aceite de execução |
+| YC-202 | 2A: execução limitada e recibos duráveis | YC-201 | Reservar operação antes de chamar; impor tempo e quantidade, registrar consumo observado, encerrar processos próprios e conservar resultado incerto sem repetir | Implementado; mecanismo determinístico em validação final |
+| YC-203 | 2A: instalação, consulta e provas dos adaptadores | YC-202 | Provar cliente autenticado e API explícita quando houver acesso, em matriz por ambiente; consulta sem escrita e adoção preservada. Cada combinação sem prova permanece indisponível | Parcial; faltam provas de isolamento/autenticação nos perfis nativos. [Matriz](relatorios/2026-10-03-mission-runtime-adapters.md) |
 | YC-204 | 2B: coordenador e fila priorizada | YC-203 | Uma missão ativa por repositório; três PBIs e três execuções como limites distintos; dependências e ordem persistidas. Sem item elegível, persistir espera | Planejado |
 | YC-205 | 2B: branches e worktrees por PBI | YC-204 | Um escritor por checkout, base registrada, alterações do usuário preservadas, limpeza apenas de recursos próprios e recuperação após criação interrompida | Planejado |
 | YC-206 | 2B: decisões de PM/Tech Lead e contexto dos agentes | YC-204, YC-205 | Validar propostas estruturadas e revisões; repriorizar somente PBIs não iniciados; avisar líderes uma vez por evento. Contexto reúne referências necessárias, sem ampliar escopo | Planejado |
@@ -131,8 +131,8 @@ terminar sem deploy de produto, declarando o alvo que realmente publicou.
 Registrar horários UTC de criação, refinamento, desenvolvimento, revisão, QA, deploy e verificação,
 preservando cada ocorrência. Etapas ainda não executadas ficam sem timestamp de conclusão.
 Cada atualização deste backlog acompanha o PR que mudou seu estado e a prova correspondente.
-Neste snapshot, os 25 itens obrigatórios acima ainda estão pendentes ou em revisão; isso é uma
-contagem de itens, sem equivalência de esforço entre eles.
+Os 25 itens obrigatórios incluem o mecanismo 2A implementado e as provas nativas ainda abertas.
+A contagem descreve o escopo do backlog, sem equivalência de esforço ou percentual de conclusão.
 
 ## Extensões após o núcleo
 
@@ -151,13 +151,13 @@ dos modelos continuam finitos; as extensões devem melhorar recuperação e nave
 
 ## English overview
 
-The foundation and mission preparation are published. The next delivery is 2A: client preflight,
-bounded execution and durable receipts. Its [implementation plan](superpowers/plans/2026-10-03-mission-runtime-adapters.md)
-is awaiting review. Next come the priority queue and isolated workspaces (2B), pause/resume/transfer
+The foundation and mission preparation are published. Delivery 2A implements client preflight,
+bounded execution and durable receipts, with [native isolation proofs still open](relatorios/2026-10-03-mission-runtime-adapters.md).
+Both native profiles stay blocked. Next come the priority queue and isolated workspaces (2B), pause/resume/transfer
 (2C), independent QA and integration (3), and protected release with verified production (4).
 
-There are 25 pending core backlog items in this snapshot, including two outstanding native proof
-items and four final acceptance/public release items. Item counts are not effort estimates.
+The 25 core backlog items include the implemented 2A mechanism, outstanding native proofs and
+four final acceptance/public release items. Item counts are not effort estimates or completion percentages.
 The tables above retain stable IDs, dependencies, acceptance criteria and status. Optional
 claude-mem, assisted indexing, continuous synchronization and immutable marketplace pinning remain
 separate candidates. Commands are documented as available only after installation and verification.

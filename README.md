@@ -301,14 +301,21 @@ automáticos pertencem às próximas entregas. Veja o [passo a passo](docs/USAGE
 de missões no Windows e percurso de adoção/retorno nos dois sistemas. O ensaio usa a CLI instalada;
 não comprova uma conversa nativa com os modelos configurados.
 
-O [backlog completo](docs/BACKLOG.md) reúne as entregas publicadas, 25 itens pendentes, dependências
-e critérios de aceite. A próxima implementação tem [plano escrito em revisão](docs/superpowers/plans/2026-10-03-mission-runtime-adapters.md)
-para três PBIs: compatibilidade dos clientes, execução limitada com recuperação e instalação/provas.
+O [diagnóstico dos clientes](docs/USAGE.md#mission-client-checks) consulta modelos e esforços no
+catálogo nativo. O desenvolvedor escolhe um nome explícito ou `latest`, que usa a recomendação
+atual do cliente para a conta. `client-default` conserva o esforço padrão do modelo. Uma prova
+autorizada reserva a tentativa antes de chamar e guarda o resultado no vault. Repetir o UUID
+consulta o mesmo recibo; resultado incerto bloqueia outra chamada até reconciliação.
+
+O [backlog completo](docs/BACKLOG.md) acompanha dependências e critérios de aceite. A entrega
+[2A: executor e adaptadores](docs/relatorios/2026-10-03-mission-runtime-adapters.md) está parcial:
+o mecanismo existe, mas os perfis de permissões de Codex e Claude ainda bloqueiam chamadas reais.
+Descobrir um modelo não comprova sua execução. API permanece indisponível nesta etapa.
 Os limites de três PBIs e três agentes serão aplicados pela fila da entrega seguinte.
 
 | Próxima entrega | O que falta para a esteira completa |
 |---|---|
-| 2A. Executor e adaptadores | Conferir conexão/modelo/effort, executar uma prova delimitada e guardar o recibo |
+| 2A. Executor e adaptadores | Completar as provas nativas nas combinações anunciadas; cada perfil sem prova continua bloqueado |
 | 2B. Fila e branches | Puxar PBIs por prioridade, aplicar limites e isolar cada desenvolvimento |
 | 2C. Continuidade | Pausar, retomar e transferir entre máquina local e servidor |
 | 3. QA e integração | Revisão independente, Playwright quando aplicável, três correções e validação conjunta |
@@ -654,14 +661,21 @@ belong to later deliveries. See the [walkthrough](docs/USAGE.md#mission-workflow
 mission tests and adoption/restoration scenarios on both systems. The smoke uses the installed CLI;
 it does not establish a native conversation with the configured models.
 
-The [full backlog](docs/BACKLOG.md#english-overview) lists published capabilities, 25 pending items,
-dependencies and acceptance criteria. The next delivery has a [written plan awaiting review](docs/superpowers/plans/2026-10-03-mission-runtime-adapters.md)
-for three PBIs: client compatibility, bounded execution with recovery, and installation/proofs.
+[Client diagnostics](docs/USAGE.md#mission-client-checks) read models and efforts from the native
+catalog. The developer chooses an explicit name or `latest`, the client's current recommendation
+for the account. `client-default` keeps the model's default effort. An authorized check reserves
+its attempt before calling and stores the result in the vault. Repeating its UUID reads the same
+receipt; an uncertain result blocks another call until reconciliation.
+
+The [full backlog](docs/BACKLOG.md#english-overview) tracks dependencies and acceptance criteria.
+[2A: executor and adapters](docs/relatorios/2026-10-03-mission-runtime-adapters.md) is partial:
+the mechanism exists, but Codex and Claude permission profiles still block live calls.
+Discovering a model does not verify execution. API connections remain unavailable in this stage.
 The following queue delivery will enforce the separate limits of three PBIs and three agents.
 
 | Next delivery | Remaining work for the complete pipeline |
 |---|---|
-| 2A. Executor and adapters | Check connection/model/effort, run a bounded proof and preserve its receipt |
+| 2A. Executor and adapters | Complete native proofs for advertised combinations; unverified profiles stay blocked |
 | 2B. Queue and branches | Pull PBIs by priority, enforce limits and isolate each development workspace |
 | 2C. Continuity | Pause, resume and transfer between a local machine and a server |
 | 3. QA and integration | Independent review, Playwright where applicable, three corrections and joint validation |

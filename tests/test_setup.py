@@ -34,7 +34,8 @@ FILES += ('scripts/capabilities.py', 'skills/govern-capabilities/SKILL.md',
           '.claude/skills/govern-capabilities/SKILL.md', '.agents/skills/govern-capabilities/SKILL.md')
 FILES += ('scripts/adoption.py', 'scripts/adoption_fs.py', 'scripts/adoption_acl.ps1')
 FILES += tuple(f'scripts/{name}.py' for name in
-               ('mission_config', 'mission_backlog', 'mission_store', 'mission_vault', 'missions'))
+               ('mission_config', 'mission_backlog', 'mission_store', 'mission_vault', 'missions',
+                'mission_clients', 'mission_process', 'mission_runs'))
 FILES += tuple(f'{base}/{name}/SKILL.md' for base in ('skills', '.claude/skills', '.agents/skills')
                for name in ('yc-personalizer', 'yc-config', 'yc-missao', 'yc-status'))
 
@@ -67,6 +68,15 @@ def fake_git(args):
 
 
 class SetupTests(unittest.TestCase):
+    def test_runtime_helpers_preserve_existing_install(self):
+        write(self.target / 'scripts/mission_runs.py', '# human adapter\n')
+        result = self.run_setup('--client', 'both', '--no-plugins', '--force', timeout=180)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.target / 'scripts/mission_runs.py').read_text(), '# human adapter\n')
+        for name in ('mission_clients', 'mission_process'):
+            self.assertTrue((self.target / f'scripts/{name}.py').is_file())
+        self.assertFalse((self.target / 'vault/local/operations/state.sqlite3').exists())
+
     def test_mission_commands_follow_client_selection(self):
         names = ('yc-personalizer', 'yc-config', 'yc-missao', 'yc-status')
         for client in ('claude', 'codex', 'both'):
@@ -354,14 +364,14 @@ class SetupTests(unittest.TestCase):
         return subprocess.run([self.real_git, *args], env=self.child_env, capture_output=True,
                               encoding='utf-8', check=check, timeout=20)
 
-    def run_setup(self, *args, env=None):
+    def run_setup(self, *args, env=None, timeout=None):
         child = self.child_env.copy()
         child.update(env or {})
         return subprocess.run(
             [self.bash, '-c', 'export PATH="$TEST_BIN:$TEST_GIT_BIN:/usr/bin:/bin"; exec /usr/bin/bash "$@"',
              'test-setup', shell_path(self.source / 'setup.sh'), shell_path(self.target), *args],
             cwd=self.source, env=child, capture_output=True, encoding='utf-8', errors='replace',
-            stdin=subprocess.DEVNULL, timeout=180 if any('trial' in a for a in args) else 45)
+            stdin=subprocess.DEVNULL, timeout=timeout or (180 if any('trial' in a for a in args) else 45))
 
     def assert_no_project_writes(self, result):
         self.assertNotEqual(result.returncode, 0, result.stdout)
